@@ -1,10 +1,18 @@
+//required mods: filesystem, twitch and extralife
 const fs = require('fs');
 const tmi = require('tmi.js');
 const extraLife = require('extra-life');
+
+//ENV vars include your EL ID (from your profile page), twitch username (which doubles as the channel name) and donation link.
 const extraLifeID = process.env.EXTRALIFE_ID;
 const channel = process.env.TWITCH_USERNAME;
 const donate_link = process.env.DONATE_LINK;
+
+//Due to EL throwing 403's, we park it with a boolean until we can confirm connection
 const extra_life_connected = false;
+
+//instatiate and connect the twitch client
+//Twilio has great getting started for getting the token, etc: https://www.twilio.com/blog/creating-twitch-chat-bots-with-node-js
 const client = new tmi.Client({
   options: { debug: true },
   connection: {
@@ -19,9 +27,7 @@ const client = new tmi.Client({
 });
 
 
-
-
-
+//chat related vars follow.  
 var said_hello = false;
 
 var fires = 0;
@@ -31,6 +37,8 @@ var heatherdeaths = 0;
 var woots = 0;
 var blames = 0;
 var yeets = 0;
+
+//persistent stats are held in a JSON config file.
 var alltimestats = null;
 if (fs.existsSync('.stats')){
   var stats = fs.readFileSync('.stats');
@@ -47,19 +55,32 @@ if (fs.existsSync('.stats')){
   writeAllTimeStats();
 }
 
+//set the actual .stats file.
+function writeAllTimeStats() {
+  fs.writeFile(".stats", '{"fires":"'+alltimestats.fires+'","heatherdeaths":"'+alltimestats.heatherdeaths+'","yeets":"'+alltimestats.yeets+'","blames":"'+alltimestats.blames+'","woots":"'+alltimestats.woots+'"}', function(err) {
+    if(err) {
+        return console.log(err);
+    } else {
+        return console.log("All Time Stats set")
+    }
+  });
+}
 
+//the idea here was to keep duplicate votes (two people voting on the same event) from counting.
+//might remove it later, not sure it's actually being useful
 var fire_cooldown = false;
 var idea_cooldown = false;
 var heather_cooldown = false;
+
+//placeholder object for the most recent donation
 var last_donation = {};
 
+//Stolen from zen-compiler.  Practically an easter egg, but handy for testing.
 var wait_phrases1 = ["Brooks are babbling","Blaze your own trail","Leaves are rustling","A cool breeze blows","Somewhere there is a rainbow","It is likely a puppy got adopted today","Somewhere, the skies are blue","Today is not a good day to die"];
 var wait_phrases2 = ["Live the life you have imagined.","A mountain sighs","Changing the polarity","The tree that bends survives the storm","Take a deep breath","Every morning, a fresh dew on the leaf","Pixels can make true art","Mistakes are part of learning","Errors do not define you"];
 var wait_phrases3 = ["Go confidently in the direction of your dreams.","Take a moment, this API is...","Taking the next star to the right","A river flows into the ocean","Could use a sonic screwdriver","The sun will always shine again","We left footprints on the moon","Tomorrow is the first day of the rest of your life","Shy from danger, not the fight","To err is human"];
 
-var land_locations = ["CORAL CASTLE","CATTY CORNER","CORNY COMPLEX","CRAGGY CLIFFS","DIRTY DOCKS","HOLLY HATCHERY","LAZY LAKE","MISTY MEADOWS","STEALTHY STRONGHOLD","PLEASANT PARK","SLURPY SWAMP","BONEY BURBS","BELIEVER BEACH","WEEPING WOODS","WEIRD ALIEN AREA","SKI LODGE"];
-
-
+//the three arrays are just to keep them more human readable.  Here we just join them together.
 var all_phrases = [];
 for(var x = 0; x < wait_phrases1.length; x++) {
   all_phrases.push(wait_phrases1[x]);
@@ -71,15 +92,23 @@ for(var x = 0; x < wait_phrases3.length; x++) {
   all_phrases.push(wait_phrases3[x]);
 }
 
+//randomly return a phrase
 function getWaitPhrase() {
     return all_phrases[Math.floor(Math.random()*all_phrases.length)];
   }
 
+
+
+//Update this manually as the seasons change. Might create an API CLI utility to auto-update/move this to a config instead.
+var land_locations = ["CORAL CASTLE","CATTY CORNER","CORNY COMPLEX","CRAGGY CLIFFS","DIRTY DOCKS","HOLLY HATCHERY","LAZY LAKE","MISTY MEADOWS","STEALTHY STRONGHOLD","PLEASANT PARK","SLURPY SWAMP","BONEY BURBS","BELIEVER BEACH","WEEPING WOODS","WEIRD ALIEN AREA","SKI LODGE"];
+
+//randomly return a location
 function getLandingSpot() {
     return land_locations[Math.floor(Math.random()*land_locations.length)];
 }
 
-
+//so the goal here was to give the audience the chance if the squad is doing a good idea or a bad one.
+//it's almost always a bad idea so this was more of an exercise in a timed vote than functionality people use.
 function startIdeaCooldown() {
     idea_cooldown = true;
     setTimeout(function() {
@@ -93,19 +122,12 @@ function startIdeaCooldown() {
     }, 10000);
 }
 
-function writeAllTimeStats() {
-  fs.writeFile(".stats", '{"fires":"'+alltimestats.fires+'","heatherdeaths":"'+alltimestats.heatherdeaths+'","yeets":"'+alltimestats.yeets+'","blames":"'+alltimestats.blames+'","woots":"'+alltimestats.woots+'"}', function(err) {
-    if(err) {
-        return console.log(err);
-    } else {
-        return console.log("All Time Stats set")
-    }
-  });
-}
-
-client.connect()
+//Extra Life API code
 
 
+//Post EL API connection, we make calls to get recent donors, after the first we get here where GITS says hi
+//Then we start doing the timed call to keep checking for a more recent donor.
+//But if res is null that means EL tossed a 403 at us and then we don't keep knocking the server's door.
 function formatResponse(res) {
   var r = 'Hi! I am the GITSBot1000.  If you are seeing this the match is about to start.  I can keep track of various stats during the game if you help me. Chat "!help" to see my commands.';
   if(res) {
@@ -124,12 +146,14 @@ function formatResponse(res) {
   }
 }
 
+//Call for the most recent donor
 function getLastDonation() {
   extraLife.getParticipantActivity(extraLifeID).then(checkLastDonation, function(error) {
     console.log(error);
   });
 }
 
+//Check the most recent against our last known.  If it's new - ka-ching.
 function checkLastDonation(res) {
   if(res.totalRecords == 0) {setTimeout(getLastDonation,75000);}
   else {
@@ -147,6 +171,10 @@ function checkLastDonation(res) {
 }
 
 
+
+//TMI (Twitch client) is event based.
+//*join* is when the client connects to the channel.  Note that the client likes to drop and re-connect.  
+//*message* is when someone (including the bot) messages in chat 
 client.on("join", function (address, port)
 	{
 		if(!said_hello) {
@@ -299,6 +327,14 @@ client.on('message', (channel, tags, message, self) => {
 
 
 
+
+
+//connect the client and start the show
+client.connect().catch(console.error);
+
+
+//all of this code fot GITSbot1000 so say goodbye.  So dramatic.
+//TLDR it hangs the process to keep it open and then catches all possible exit events.
 process.stdin.resume();//so the program will not close instantly
 
 function exitHandler(options, exitCode) {

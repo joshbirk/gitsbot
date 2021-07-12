@@ -26,6 +26,9 @@ const client = new tmi.Client({
   channels: [channel]
 });
 
+//known bots and admins
+const known_bots = ["anotherttvviewer","commanderroot","streamlabs","joshbirk"];
+
 
 //chat related vars follow.  
 var said_hello = false;
@@ -175,9 +178,13 @@ function checkLastDonation(res) {
 //TMI (Twitch client) is event based.
 //*join* is when the client connects to the channel.  Note that the client likes to drop and re-connect.  
 //*message* is when someone (including the bot) messages in chat 
-client.on("join", function (address, port)
+client.on("join", function (channel, username, self) 
 	{
-		if(!said_hello) {
+		console.log(username + " has entered " + channel);
+    if(!self && !known_bots.includes(username)) {
+      client.say(channel,`@Welcome to the chat ${username}.  We are playing for Extra Life.  Type !donate to see the donation link. Try !help to see my commands. Enjoy the show!`);    
+    }
+    if(!said_hello) {
             said_hello = true;
             extraLife.getParticipantActivity(extraLifeID).then(formatResponse, function(error) {
               console.log("Never got to ExtraLife");
@@ -187,12 +194,14 @@ client.on("join", function (address, port)
         } else {
             if(Math.random() == 0.1) {client.say(channel,'We hope you are enjoying the game.  Type !donate to see the donation link. Try !help to see my commands.');}
         }
-    });
+  });
     
+
+//Listen for messages and respond
 client.on('message', (channel, tags, message, self) => {
   // Ignore echoed messages.
   if(self) return;
-
+  console.log(tags);
   var m = message.toLowerCase();
 
   if(m.indexOf(" ") > 0) { m = m.split(" ")[0]; }

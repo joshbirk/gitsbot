@@ -6,6 +6,7 @@ const extraLife = require('extra-life');
 //ENV vars include your EL ID (from your profile page), twitch username (which doubles as the channel name) and donation link.
 const extraLifeID = process.env.EXTRALIFE_ID;
 const channel = process.env.TWITCH_USERNAME;
+const token = process.env.HANDSHAKE_TOKEN;
 const donate_link = process.env.DONATE_LINK;
 
 //Due to EL throwing 403's, we park it with a boolean until we can confirm connection

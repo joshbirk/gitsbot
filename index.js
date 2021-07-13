@@ -12,7 +12,7 @@ const donate_link = process.env.DONATE_LINK;
 const extra_life_connected = false;
 
 //instatiate and connect the twitch client
-//Twilio has great getting started for getting the token, etc: https://www.twilio.com/blog/creating-twitch-chat-bots-with-node-js
+//Twilio has great getting started ,for getting the token, etc: https://www.twilio.com/blog/creating-twitch-chat-bots-with-node-js
 const client = new tmi.Client({
   options: { debug: true },
   connection: {
@@ -182,7 +182,7 @@ client.on("join", function (channel, username, self)
 	{
 		console.log(username + " has entered " + channel);
     if(!self && !known_bots.includes(username)) {
-      client.say(channel,`@Welcome to the chat ${username}.  We are playing for Extra Life.  Type !donate to see the donation link. Try !help to see my commands. Enjoy the show!`);    
+      client.say(channel,`@Welcome to the chat ${username}. I am GITSbot. We are playing for Extra Life.  Type !donate to see the donation link. Try !help to see my commands. Enjoy the show!`);    
     }
     if(!said_hello) {
             said_hello = true;
@@ -215,7 +215,7 @@ client.on('message', (channel, tags, message, self) => {
   }
 
   if(m === '!hello') {
-    r = `@${tags.username}, Hi!  Thanks for joining the game.  My name is GITSbot.  Try !help to see my commands.`;
+    r = `@${tags.username}, great seeing you today.  Try !help to see my commands.  Here is a zen phrase for you: ${getWaitPhrase()}`;
   }
 
   if(m === '!donate') {

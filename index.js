@@ -2,6 +2,8 @@
 const fs = require('fs');
 const tmi = require('tmi.js');
 const extraLife = require('extra-life');
+const https = require('https');
+
 
 //ENV vars include your EL ID (from your profile page), twitch username (which doubles as the channel name) and donation link.
 const extraLifeID = process.env.EXTRALIFE_ID;
@@ -248,6 +250,7 @@ client.on('message', (channel, tags, message, self) => {
         r = `@${tags.username}, Hi!  Looks like the crew set something on fire.  Probably Slychika. According to the audience the crew has exploded or set ${fires} thing(s) on fire.`;
         fire_cooldown = true;
         writeAllTimeStats();
+        https.get('https://gitsgifs.herokuapp.com/img/fire/'+process.env.HANDSHAKE_TOKEN);
         setTimeout(function() {
             fire_cooldown = false;
         }, 5000);
@@ -265,6 +268,7 @@ client.on('message', (channel, tags, message, self) => {
     woots++;
     alltimestats.woots++;
     r = `@${tags.username}, Hi!  Woot added! The crew has earned ${woots} woot(s).  This vote has no cooldown.`;
+    https.get('https://gitsgifs.herokuapp.com/img/woot/'+process.env.HANDSHAKE_TOKEN);
     writeAllTimeStats();
   }
 
@@ -272,6 +276,7 @@ client.on('message', (channel, tags, message, self) => {
     yeets++;
     alltimestats.yeets++;
     r = `@${tags.username}, Hi!  Yeet added! Someone, probably Reid, has yeeted ${yeets} player(s) so far.  This vote has no cooldown.`;
+    https.get('https://gitsgifs.herokuapp.com/img/yeet/'+process.env.HANDSHAKE_TOKEN);     
     writeAllTimeStats();
   }
 
@@ -307,6 +312,7 @@ client.on('message', (channel, tags, message, self) => {
             heather_cooldown = false;
         }, 5000);
     }
+    https.get('https://gitsgifs.herokuapp.com/img/dead/'+process.env.HANDSHAKE_TOKEN);
     writeAllTimeStats();
   }
 

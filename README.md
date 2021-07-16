@@ -1,13 +1,13 @@
-#GITSbot
+# GITSbot
 
-##About
+## About
 A chatbot for the Gaming In Interesting Times Fortnite stream: <http://twitch.tv/joshbirk>
 
 The stream usually airs every Thursday, 5PM CST for about 1-2 hours.
 
 GITSbot welcomes new viewers, provides links and updates on donations to Extra Life (when possible) and tracks stats on various things being reported on the stream.
 
-###Commands
+### Commands
   * !help: displays this list
   * !hello: prompts a greeting from GITSbot
   * !donate: displays the donation link to Extra Life, and if Extra Life is connected - the last donation
@@ -25,12 +25,12 @@ GITSbot welcomes new viewers, provides links and updates on donations to Extra L
   * !zen: provides a random zen joke
   * !luv: prompts a luv response
 
-###Extra Life connection
+### Extra Life connection
 GITSbot will add the latest donations to its original greeting, report the very last one with !donate and also tell the chat if a new donation has come through.
 
 Or it would do any of that if Cloudfare hadn't started randomly responding to EL chatbots with 403 errors.  No resolution currently for that.  Our polling is only every 75 seconds and Cloudflare also started blocking curl tests, so I guess it just hates CLI.
 
-###Custom GIF server
+### Custom GIF server
 
 There is a [companion app](https://github.com/joshbirk/gitsgifs) which serves up GIFs to a web socket enabled client for displaying custom reactions to the report commands.
 

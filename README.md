@@ -34,7 +34,7 @@ Or it would do any of that if Cloudfare hadn't started randomly responding to EL
 
 There is a [companion app](https://github.com/joshbirk/gitsgifs) which serves up GIFs to a web socket enabled client for displaying custom reactions to the report commands.
 
-###Setup and running
+### Setup and running
 
 If you want to clone and run a version of gitsbot yourself, it's fairly easy to setup.  It runs locally or could be setup as a Heroku instance or the like.  Once you have the code and node setup, you'll need the following environment variables:
 

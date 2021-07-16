@@ -1,7 +1,7 @@
 //required mods: filesystem, twitch and extralife
 const fs = require('fs');
 const tmi = require('tmi.js');
-const extraLife = require('extra-life');
+const extraLife = require('extra-life-api');
 const https = require('https');
 
 
@@ -137,15 +137,16 @@ function startIdeaCooldown() {
 function formatResponse(res) {
   var r = 'Hi! I am the GITSBot1000.  If you are seeing this the match is about to start.  I can keep track of various stats during the game if you help me. Chat "!help" to see my commands.';
   if(res) {
+    var donations = res.donations;
     extra_life_connected = true;
     r += '\n\nA reminder that we are gaming for Extra Life! Here are the most recent donations!  Thanks to all our donors!\n\n';
-    for(var i = 0; i < res.totalRecords; i++) {
-        r += `${res.records[i].title}: \$${res.records[i].amount}`;
-        if(res.records[i].message != null) {r += `  "${res.records[i].message}"`;}
+    for(var i = 0; i < donations.length; i++) {
+        r += `${donations[i].displayName}: \$${donations[i].amount}`;
+        if(donations[i].message != null) {r += `  "${donations[i].message}"`;}
         r += '\n';
       }
       client.say(channel,r);
-      if(res.totalRecords > 0) {last_donation = res.records[0];}
+      if(donations.length > 0) {last_donation = donations[0];}
       setTimeout(getLastDonation,75000);
   } else { 
     client.say(channel,r);
@@ -154,22 +155,24 @@ function formatResponse(res) {
 
 //Call for the most recent donor
 function getLastDonation() {
-  extraLife.getParticipantActivity(extraLifeID).then(checkLastDonation, function(error) {
+  extraLife.getUserDonations(extraLifeID).then(checkLastDonation, function(error) {
     console.log(error);
   });
 }
 
 //Check the most recent against our last known.  If it's new - ka-ching.
 function checkLastDonation(res) {
-  if(res.totalRecords == 0) {setTimeout(getLastDonation,75000);}
+  console.log('API Call');
+  var donations = res.donations;
+  if(donations.length == 0) {setTimeout(getLastDonation,75000);}
   else {
-    if(res.records[0].createdDateUTC != last_donation.createdDateUTC) {
+    if(donations[0].createdDateUTC != last_donation.createdDateUTC) {
         var r = 'We have had a new donation!\n';
         r += `${res.records[0].title}: \$${res.records[0].amount}`;
-        if(res.records[0].message != null) {r += `  "${res.records[0].message}"`;}
+        if(donations[0].message != null) {r += `  "${res.records[0].message}"`;}
         r += `\n`;
-        r += `Thank you, ${res.records[0].title}!  Kids can't wait.`;
-        last_donation = res.records[0];
+        r += `Thank you, ${donations[0].displayName}!  Kids can't wait.`;
+        last_donation = donations[0];
         client.say(channel,r);
     }
     setTimeout(getLastDonation,75000);
@@ -189,7 +192,7 @@ client.on("join", function (channel, username, self)
     }
     if(!said_hello) {
             said_hello = true;
-            extraLife.getParticipantActivity(extraLifeID).then(formatResponse, function(error) {
+            extraLife.getUserDonations(extraLifeID).then(formatResponse, function(error) {
               console.log("Never got to ExtraLife");
               formatResponse(null);
               console.log(error);
